@@ -1,0 +1,21 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Streamlit local config and secrets
+.streamlit/secrets.toml
+
+# Charts and files downloaded from Claude
+claude_outputs/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
