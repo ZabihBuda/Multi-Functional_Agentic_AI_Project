@@ -13,13 +13,23 @@ Built with Python, [Streamlit](https://streamlit.io) and the [Claude API](https:
 
 You can upload several files at once and ask questions that span them.
 
+## How it keeps answers accurate
+
+The app is built to answer from your files, not from Claude's general knowledge:
+
+- **Grounded answers.** Claude is told to answer only from the uploaded files and to say plainly when they don't contain the answer, rather than guess. Where files only partly answer a question, or disagree with each other, it says so.
+- **Computed numbers.** Every total, average, percentage or comparison is calculated with Python in the sandbox, never estimated. Claude checks each table's columns, types and missing values first, and states the columns and filters it used so you can check the method.
+- **Citations.** Answers from documents, PDFs and transcripts carry `[1]`-style markers. Open **Sources** under the answer to see the exact passage each one rests on, with page numbers for PDFs. Answers from tables name the file and columns; answers from images name the image.
+- **Stated uncertainty.** Claude flags unreadable parts of images, possible speech-recognition errors in transcripts, and ambiguous questions (saying which reading it used).
+- **Careful effort.** The model runs at `high` effort, so it spends more time checking its work before answering.
+
 ## Quick start
 
 You need Python 3.10 or newer and an Anthropic API key from the [Claude Console](https://platform.claude.com).
 
 ```bash
-git clone https://github.com/ZabihBuda/Mulit-Functional_Agentic_AI_Project.git
-cd Mulit-Functional_Agentic_AI_Project
+git clone https://github.com/ZabihBuda/Multi-Functional_Agentic_AI_Project.git
+cd Multi-Functional_Agentic_AI_Project
 
 python -m venv .venv
 source .venv/bin/activate          # on Windows: .venv\Scripts\activate
@@ -58,8 +68,8 @@ New files are sent along with your next question, once. The sandbox is kept betw
 | Setting | Where | Default |
 |---|---|---|
 | Model | `MODEL` in `agent.py` | `claude-opus-5-5` (try `claude-sonnet-5-5` for cheaper, faster answers) |
-| Effort | `output_config` in `agent.py` | `medium` (use `high` for harder analysis) |
-| Instructions to Claude | `SYSTEM` in `agent.py` | short, answer-first, always compute with code |
+| Effort | `EFFORT` in `agent.py` | `high` (`medium` is cheaper and faster, `max` is the most thorough) |
+| Instructions to Claude | `SYSTEM` in `agent.py` | answer only from the files, compute numbers with code, cite sources, flag uncertainty |
 | Speech-to-text model | `transcribe()` in `file_handlers.py` | Whisper `base` on CPU |
 
 ## Costs and privacy
@@ -71,7 +81,8 @@ New files are sent along with your next question, once. The sandbox is kept betw
 ## Known limits
 
 - The sandbox expires after a period of inactivity. If a later question fails, click **Start over** in the sidebar.
-- Audio transcription on CPU is slow for long recordings.
+- Audio transcription on CPU is slow for long recordings, and transcripts can mishear words. Check important quotes against the recording.
+- Citations with exact passages cover documents, PDFs and transcripts. For tables and images, the answer names its source but has no clickable passage.
 - This is a prototype: there is no login, and chats are not saved after you close the page.
 
 ## License

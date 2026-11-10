@@ -9,7 +9,7 @@ import anthropic
 import streamlit as st
 from dotenv import load_dotenv
 
-from agent import run_turn
+from agent import format_answer, run_turn
 from file_handlers import SUPPORTED, to_blocks
 
 load_dotenv()  # reads ANTHROPIC_API_KEY from a local .env file, if present
@@ -25,7 +25,7 @@ def get_client():
 def init_state():
     ss = st.session_state
     ss.setdefault("messages", [])        # API-format history sent to Claude
-    ss.setdefault("chat", [])            # what the UI shows: (role, text, images)
+    ss.setdefault("chat", [])            # what the UI shows: (role, text, images, sources)
     ss.setdefault("pending", [])         # blocks for files not yet sent
     ss.setdefault("loaded", {})          # file name -> kind
     ss.setdefault("container_id", None)
@@ -73,6 +73,17 @@ def show_images(client, file_ids):
     return images
 
 
+def show_sources(sources):
+    """List the passages behind the [n] markers in an answer."""
+    if not sources:
+        return
+    with st.expander(f"Sources ({len(sources)})"):
+        for s in sources:
+            where = f", {s['location']}" if s["location"] else ""
+            quote = s["quote"].replace("\n", " ")
+            st.markdown(f"**[{s['number']}] {s['title']}{where}**\n\n> {quote}")
+
+
 def main():
     init_state()
     client = get_client()
@@ -80,11 +91,12 @@ def main():
     ss = st.session_state
 
     st.title("Chat with your files")
-    for role, text, images in ss.chat:
+    for role, text, images, sources in ss.chat:
         with st.chat_message(role):
             st.markdown(text)
             for img in images:
                 st.image(img)
+            show_sources(sources)
 
     question = st.chat_input("Ask about your files…")
     if not question:
@@ -92,7 +104,7 @@ def main():
 
     with st.chat_message("user"):
         st.markdown(question)
-    ss.chat.append(("user", question, []))
+    ss.chat.append(("user", question, [], []))
     # Newly uploaded files ride along with this question, once.
     ss.messages.append({"role": "user",
                         "content": ss.pending + [{"type": "text", "text": question}]})
@@ -109,7 +121,7 @@ def main():
             box.markdown("".join(parts))
 
         try:
-            ss.container_id, file_ids, stop = run_turn(
+            ss.container_id, file_ids, stop, blocks = run_turn(
                 client, ss.messages, ss.container_id,
                 on_text=on_text, on_status=lambda s: status.caption(s))
         except anthropic.APIError as e:
@@ -117,12 +129,14 @@ def main():
             st.error(f"Claude API error: {e}")
             return
         status.empty()
-        answer = "".join(parts) or "_(no text answer)_"
+        answer, sources = format_answer(blocks)
+        answer = answer or "".join(parts) or "_(no text answer)_"
         if stop == "refusal":
             answer += "\n\n_Claude declined to answer this one._"
         box.markdown(answer)
         images = show_images(client, file_ids)
-    ss.chat.append(("assistant", answer, images))
+        show_sources(sources)
+    ss.chat.append(("assistant", answer, images, sources))
 
 
 main()

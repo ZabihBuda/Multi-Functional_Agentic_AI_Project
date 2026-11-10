@@ -64,7 +64,8 @@ def to_blocks(client, name: str, data: bytes) -> tuple[str, list[dict]]:
     if kind == "table":
         file_id = _upload(client, name, data, "application/octet-stream")
         note = (f"The table file '{name}' is uploaded to your code execution "
-                "sandbox. Load it with pandas to answer questions about it.")
+                "sandbox. Load it with pandas and compute answers from it; "
+                "cite it by this file name.")
         return kind, [{"type": "text", "text": note},
                       {"type": "container_upload", "file_id": file_id}]
     if kind == "text":
@@ -77,11 +78,14 @@ def to_blocks(client, name: str, data: bytes) -> tuple[str, list[dict]]:
                        "source": {"type": "file", "file_id": file_id}}]
     if kind == "image":
         file_id = _upload(client, name, data, IMAGE_EXTS[Path(name).suffix.lower()])
-        return kind, [{"type": "text", "text": f"Image file: {name}"},
+        return kind, [{"type": "text", "text": f"Image file '{name}' (cite it by this "
+                                               "name; say if any part is unreadable):"},
                       {"type": "image", "source": {"type": "file", "file_id": file_id}}]
     if kind == "audio":
         transcript = transcribe(name, data)
         return kind, [{"type": "document", "title": f"Transcript of {name}",
+                       "context": ("Automatic speech-to-text transcript with timestamps "
+                                   "in seconds. It may contain recognition errors."),
                        "citations": {"enabled": True},
                        "source": {"type": "text", "media_type": "text/plain",
                                   "data": transcript or "(no speech detected)"}}]
