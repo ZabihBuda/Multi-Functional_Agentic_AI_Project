@@ -2,10 +2,12 @@
 
 import anthropic
 
-MODEL = "claude-opus-5-5"
+import settings
+
+MODEL = settings.MODEL
 MAX_CONTINUATIONS = 5
 # Higher effort = more careful reasoning and checking, at more tokens per answer.
-EFFORT = "high"
+EFFORT = settings.EFFORT
 
 SYSTEM = """You answer questions about files the user has uploaded: tables (CSV, \
 Excel, JSON, Parquet), text documents, PDFs, images, and transcripts of audio. \

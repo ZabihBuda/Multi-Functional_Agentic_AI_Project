@@ -45,6 +45,10 @@ streamlit run app.py
 
 Streamlit opens the app in your browser (usually at http://localhost:8501). Drop files into the sidebar and start asking.
 
+## Put it on the web
+
+To run it as a public website, with free questions on your key, usage caps, upload limits and an option for visitors to use their own key, follow [DEPLOY.md](DEPLOY.md).
+
 ## How it works
 
 ```
@@ -60,6 +64,7 @@ your question ──> agent.py ──> Claude Opus 5.5 + code execution sandbox
 | `app.py` | The Streamlit page: sidebar uploader, chat history, streaming answers, inline charts |
 | `agent.py` | Sends the conversation to Claude, streams the reply, resumes long code runs, collects charts Claude saves |
 | `file_handlers.py` | Turns each upload into the right input: sandbox upload for tables, document for text and PDF, image for pictures, transcript for audio |
+| `settings.py` | Reads settings from environment variables: model, effort, and the public-website limits |
 
 New files are sent along with your next question, once. The sandbox is kept between questions, so data Claude has loaded stays loaded.
 
@@ -67,10 +72,12 @@ New files are sent along with your next question, once. The sandbox is kept betw
 
 | Setting | Where | Default |
 |---|---|---|
-| Model | `MODEL` in `agent.py` | `claude-opus-5-5` (try `claude-sonnet-5-5` for cheaper, faster answers) |
-| Effort | `EFFORT` in `agent.py` | `high` (`medium` is cheaper and faster, `max` is the most thorough) |
+| Model | `CLAUDE_MODEL` in `.env` | `claude-opus-5-5` (try `claude-sonnet-5-5` for cheaper, faster answers) |
+| Effort | `CLAUDE_EFFORT` in `.env` | `high` (`medium` is cheaper and faster, `max` is the most thorough) |
 | Instructions to Claude | `SYSTEM` in `agent.py` | answer only from the files, compute numbers with code, cite sources, flag uncertainty |
 | Speech-to-text model | `transcribe()` in `file_handlers.py` | Whisper `base` on CPU |
+| Upload size | `server.maxUploadSize` in `.streamlit/config.toml` and `MAX_FILE_MB` | 10 MB per file |
+| Public-website limits | `PUBLIC_MODE` and friends, see [DEPLOY.md](DEPLOY.md) | off |
 
 ## Costs and privacy
 
@@ -83,7 +90,7 @@ New files are sent along with your next question, once. The sandbox is kept betw
 - The sandbox expires after a period of inactivity. If a later question fails, click **Start over** in the sidebar.
 - Audio transcription on CPU is slow for long recordings, and transcripts can mishear words. Check important quotes against the recording.
 - Citations with exact passages cover documents, PDFs and transcripts. For tables and images, the answer names its source but has no clickable passage.
-- This is a prototype: there is no login, and chats are not saved after you close the page.
+- There is no login, and chats are not saved after you close the page.
 
 ## License
 

@@ -1,0 +1,14 @@
+# Server settings used both locally and on Streamlit Community Cloud.
+
+[server]
+# Hard per-file upload limit in MB. Keep MAX_FILE_MB (settings.py) at or below it.
+maxUploadSize = 10
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false
+
+[client]
+# Hide developer menu items from public visitors.
+toolbarMode = "viewer"
+showErrorDetails = false
